@@ -15,6 +15,7 @@ class WorkforceGroup(models.Model):
     duration_days = models.IntegerField()
     payment_type = models.CharField(max_length=5, choices=PAYMENT_TYPE_CHOICES, default='jour')
 
+    @property
     def total_cost(self):
         if self.payment_type == 'jour':
             return self.number_of_workers * self.wage * self.duration_days
