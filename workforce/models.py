@@ -1,4 +1,5 @@
 from django.db import models
+from authem.models import User
 from projects.models import Project
 
 
@@ -8,6 +9,7 @@ class WorkforceGroup(models.Model):
         ('mois', 'Mensuel'),
     ]
 
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='workforce_groups')
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='workforce_groups')
     task_name = models.CharField(max_length=255)
     number_of_workers = models.IntegerField()

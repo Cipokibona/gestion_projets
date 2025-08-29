@@ -1,14 +1,17 @@
 from django.db import models
 from projects.models import Project
 from authem.models import User
+from Account.models import Account
 
 
 class Advance(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='advances')
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='advances')
     amount = models.DecimalField(max_digits=12, decimal_places=2)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='advances')
     payment_date = models.DateField()
     description = models.TextField(blank=True, null=True)
+    is_valid = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 
@@ -19,13 +22,18 @@ class MainWallet(models.Model):
     @property
     def current_amount(self):
         total_advances = sum(a.amount for a in self.project.advances.all())
-        material_expenses = sum(e.quantity * e.unit_price for e in self.project.material_expenses.all())
-        misc_expenses = sum(d.amount for d in self.project.misc_expenses.all())
-        workforce_expenses = sum(w.total_cost for w in self.project.workforce_groups.all())
-        taskwallets_initial = sum(t.initial_amount for t in self.task_wallets.all())
-        # Ajoute le reste des TaskWallets clôturés
-        taskwallets_returned = sum(t.remaining_amount for t in self.task_wallets.filter(is_closed=True))
-        return total_advances - (material_expenses + misc_expenses + workforce_expenses + taskwallets_initial) + taskwallets_returned
+        total_expenses = sum(e.amount for e in self.project.general_expenses.all())
+        return total_advances - total_expenses
+
+        # Ancienne logique (à réactiver si besoin) :
+        # total_advances = sum(a.amount for a in self.project.advances.all())
+        # material_expenses = sum(e.quantity * e.unit_price for e in self.project.material_expenses.all())
+        # misc_expenses = sum(d.amount for d in self.project.misc_expenses.all())
+        # workforce_expenses = sum(w.total_cost for w in self.project.workforce_groups.all())
+        # taskwallets_initial = sum(t.initial_amount for t in self.task_wallets.all())
+        # # Ajoute le reste des TaskWallets clôturés
+        # taskwallets_returned = sum(t.remaining_amount for t in self.task_wallets.filter(is_closed=True))
+        # return total_advances - (material_expenses + misc_expenses + workforce_expenses + taskwallets_initial) + taskwallets_returned
 
 
 class TaskWallet(models.Model):

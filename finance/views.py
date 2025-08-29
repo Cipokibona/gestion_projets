@@ -15,15 +15,15 @@ class AdvanceViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-        if hasattr(user, 'role') and user.role == 'manager':
+        if hasattr(user, 'role') and user.role in ['manager', 'accountant']:
             serializer.save()
         else:
-            raise PermissionError("Seul le manager peut créer une avance.")
+            raise PermissionError("Seul le manager ou le caissier peut créer une avance.")
 
     def perform_update(self, serializer):
         user = self.request.user
         advance = self.get_object()
-        if hasattr(user, 'role') and user.role == 'manager' and advance.project.user == user:
+        if hasattr(user, 'role') and user.role in ['manager', 'accountant'] and advance.project.user == user:
             serializer.save()
         else:
             raise PermissionError("Vous ne pouvez mettre à jour que vos propres avances.")
@@ -31,7 +31,7 @@ class AdvanceViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         user = self.request.user
         advance = self.get_object()
-        if hasattr(user, 'role') and user.role == 'manager' and advance.project.user == user:
+        if hasattr(user, 'role') and user.role in ['manager', 'accountant'] and advance.project.user == user:
             return super().destroy(request, *args, **kwargs)
         else:
             return Response({'detail': "Vous ne pouvez supprimer que vos propres avances."}, status=status.HTTP_403_FORBIDDEN)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import MaterialExpense, MiscExpense
+from .models import MaterialExpense, MiscExpense, GeneralExpense
 
 
 class MaterialExpenseSerializer(serializers.ModelSerializer):
@@ -11,4 +11,10 @@ class MaterialExpenseSerializer(serializers.ModelSerializer):
 class MiscExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = MiscExpense
+        fields = '__all__'
+
+
+class GeneralExpenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GeneralExpense
         fields = '__all__'

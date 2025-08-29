@@ -22,12 +22,16 @@ class TaskViewSet(viewsets.ModelViewSet):
         return Task.objects.none()
 
     def perform_create(self, serializer):
+        project = serializer.validated_data.get('project')
+        if project.status != 'in_progress':
+            raise PermissionError("Aucune action n'est autorisée sur les tâches d'un projet qui n'est pas en cours.")
         serializer.save(created_by=self.request.user)
 
     def perform_update(self, serializer):
         task = self.get_object()
         user = self.request.user
-        # Seul le créateur ou le manager assigné peut modifier
+        if task.project.status != 'in_progress':
+            raise PermissionError("Aucune action n'est autorisée sur les tâches d'un projet qui n'est pas en cours.")
         if (hasattr(user, 'role') and user.role == 'manager' and
             (task.created_by == user or task.assigned_to == user)):
             serializer.save()
@@ -37,6 +41,8 @@ class TaskViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         task = self.get_object()
         user = request.user
+        if task.project.status != 'in_progress':
+            return Response({'detail': "Aucune action n'est autorisée sur les tâches d'un projet qui n'est pas en cours."}, status=status.HTTP_403_FORBIDDEN)
         if (hasattr(user, 'role') and user.role == 'manager' and
             (task.created_by == user or task.assigned_to == user)):
             return super().destroy(request, *args, **kwargs)
@@ -47,6 +53,8 @@ class TaskViewSet(viewsets.ModelViewSet):
     def assign(self, request, pk=None):
         task = self.get_object()
         user = request.user
+        if task.project.status != 'in_progress':
+            return Response({'detail': "Aucune action n'est autorisée sur les tâches d'un projet qui n'est pas en cours."}, status=status.HTTP_403_FORBIDDEN)
         assigned_id = request.data.get('assigned_to')
         if task.created_by != user:
             return Response({'detail': "Seul le créateur peut assigner la tâche."}, status=status.HTTP_403_FORBIDDEN)

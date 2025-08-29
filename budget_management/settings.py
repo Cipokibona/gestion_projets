@@ -47,6 +47,9 @@ INSTALLED_APPS = [
     'workforce',
     'finance',
     'tasks',
+    'EnterpriseWallet',
+    'Account',
+    'Transaction',
 ]
 
 REST_FRAMEWORK = {
