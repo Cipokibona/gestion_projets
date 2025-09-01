@@ -8,6 +8,10 @@ from .models import Advance, MainWallet, TaskWallet
 from .serializers import AdvanceSerializer, MainWalletSerializer, TaskWalletSerializer
 
 
+def is_project_active(project):
+    return project.status in ['pending', 'in_progress']
+
+
 class AdvanceViewSet(viewsets.ModelViewSet):
     queryset = Advance.objects.all()
     serializer_class = AdvanceSerializer
@@ -15,6 +19,11 @@ class AdvanceViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
+        project = serializer.validated_data.get('project')
+
+        if not is_project_active(project):
+            raise PermissionError("Le projet doit être en cours ou en attente pour enregistrer une avance.")
+
         if hasattr(user, 'role') and user.role in ['manager', 'accountant']:
             serializer.save()
         else:
@@ -23,7 +32,12 @@ class AdvanceViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         user = self.request.user
         advance = self.get_object()
-        if hasattr(user, 'role') and user.role in ['manager', 'accountant'] and advance.project.user == user:
+        project = advance.project
+
+        if not is_project_active(project):
+            raise PermissionError("Le projet n'est pas actif.")
+
+        if hasattr(user, 'role') and user.role in ['manager', 'accountant'] and project.user == user:
             serializer.save()
         else:
             raise PermissionError("Vous ne pouvez mettre à jour que vos propres avances.")
@@ -31,7 +45,12 @@ class AdvanceViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         user = self.request.user
         advance = self.get_object()
-        if hasattr(user, 'role') and user.role in ['manager', 'accountant'] and advance.project.user == user:
+        project = advance.project
+
+        if not is_project_active(project):
+            return Response({'detail': "Le projet n'est pas actif."}, status=status.HTTP_403_FORBIDDEN)
+
+        if hasattr(user, 'role') and user.role in ['manager', 'accountant'] and project.user == user:
             return super().destroy(request, *args, **kwargs)
         else:
             return Response({'detail': "Vous ne pouvez supprimer que vos propres avances."}, status=status.HTTP_403_FORBIDDEN)
@@ -46,6 +65,9 @@ class MainWalletViewSet(viewsets.ModelViewSet):
         user = self.request.user
         project = serializer.validated_data.get('project')
 
+        if not is_project_active(project):
+            raise PermissionError("Le projet doit être actif pour créer un MainWallet.")
+
         if MainWallet.objects.filter(project=project).exists():
             raise PermissionError("Un MainWallet existe déjà pour ce projet.")
 
@@ -57,8 +79,12 @@ class MainWalletViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         user = self.request.user
         wallet = self.get_object()
+        project = wallet.project
 
-        if hasattr(user, 'role') and user.role in ['manager', 'accountant'] and wallet.project.user == user:
+        if not is_project_active(project):
+            raise PermissionError("Le projet n'est pas actif.")
+
+        if hasattr(user, 'role') and user.role in ['manager', 'accountant'] and project.user == user:
             serializer.save()
         else:
             raise PermissionError("Vous ne pouvez mettre à jour que vos propres MainWallets.")
@@ -66,8 +92,12 @@ class MainWalletViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         user = self.request.user
         wallet = self.get_object()
+        project = wallet.project
 
-        if hasattr(user, 'role') and user.role in ['manager', 'accountant'] and wallet.project.user == user:
+        if not is_project_active(project):
+            return Response({'detail': "Le projet n'est pas actif."}, status=status.HTTP_403_FORBIDDEN)
+
+        if hasattr(user, 'role') and user.role in ['manager', 'accountant'] and project.user == user:
             return super().destroy(request, *args, **kwargs)
         else:
             return Response({'detail': "Vous ne pouvez supprimer que vos propres MainWallets."}, status=status.HTTP_403_FORBIDDEN)
@@ -80,6 +110,10 @@ class TaskWalletViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
+        project = serializer.validated_data.get('project')
+
+        if not is_project_active(project):
+            raise PermissionError("Le projet doit être actif pour créer un TaskWallet.")
 
         if hasattr(user, 'role') and user.role in ['manager', 'accountant']:
             serializer.save(user=user)
@@ -89,6 +123,10 @@ class TaskWalletViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         user = self.request.user
         taskwallet = self.get_object()
+        project = taskwallet.project
+
+        if not is_project_active(project):
+            raise PermissionError("Le projet n'est pas actif.")
 
         if hasattr(user, 'role') and user.role in ['manager', 'accountant'] and taskwallet.user == user:
             serializer.save()
@@ -98,6 +136,10 @@ class TaskWalletViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         user = self.request.user
         taskwallet = self.get_object()
+        project = taskwallet.project
+
+        if not is_project_active(project):
+            return Response({'detail': "Le projet n'est pas actif."}, status=status.HTTP_403_FORBIDDEN)
 
         if hasattr(user, 'role') and user.role in ['manager', 'accountant'] and taskwallet.user == user:
             return super().destroy(request, *args, **kwargs)
@@ -107,6 +149,10 @@ class TaskWalletViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def close(self, request, pk=None):
         taskwallet = self.get_object()
+        project = taskwallet.project
+
+        if not is_project_active(project):
+            return Response({'detail': "Le projet n'est pas actif."}, status=status.HTTP_403_FORBIDDEN)
 
         if not taskwallet.is_closed:
             taskwallet.close()

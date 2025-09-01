@@ -15,8 +15,10 @@ class MaterialExpenseViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         user = self.request.user
         project = serializer.validated_data.get('project')
+
         if project.status not in ProjectExpenseAllowed.allowed_status:
             raise PermissionError("Vous ne pouvez pas ajouter de dépense à un projet qui n'est pas en cours.")
+
         if hasattr(user, 'role') and user.role == 'manager':
             serializer.save(user=user)
         else:
@@ -25,8 +27,10 @@ class MaterialExpenseViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         user = self.request.user
         expense = self.get_object()
+
         if expense.project.status not in ProjectExpenseAllowed.allowed_status:
             raise PermissionError("Vous ne pouvez pas modifier une dépense d'un projet qui n'est pas en cours.")
+
         if hasattr(user, 'role') and user.role == 'manager' and expense.user == user:
             serializer.save()
         else:
@@ -35,6 +39,10 @@ class MaterialExpenseViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         user = self.request.user
         expense = self.get_object()
+
+        if expense.project.status not in ProjectExpenseAllowed.allowed_status:
+            raise PermissionError("Vous ne pouvez pas supprimer une dépense d'un projet qui n'est pas en cours.")
+
         if hasattr(user, 'role') and user.role == 'manager' and expense.user == user:
             return super().destroy(request, *args, **kwargs)
         else:
@@ -49,8 +57,10 @@ class MiscExpenseViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         user = self.request.user
         project = serializer.validated_data.get('project')
+
         if project.status not in ProjectExpenseAllowed.allowed_status:
             raise PermissionError("Vous ne pouvez pas ajouter de dépense à un projet qui n'est pas en cours.")
+
         if hasattr(user, 'role') and user.role == 'manager':
             serializer.save(user=user)
         else:
@@ -59,8 +69,10 @@ class MiscExpenseViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         user = self.request.user
         expense = self.get_object()
+
         if expense.project.status not in ProjectExpenseAllowed.allowed_status:
             raise PermissionError("Vous ne pouvez pas modifier une dépense d'un projet qui n'est pas en cours.")
+
         if hasattr(user, 'role') and user.role == 'manager' and expense.user == user:
             serializer.save()
         else:
@@ -69,6 +81,10 @@ class MiscExpenseViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         user = self.request.user
         expense = self.get_object()
+
+        if expense.project.status not in ProjectExpenseAllowed.allowed_status:
+            raise PermissionError("Vous ne pouvez pas supprimer une dépense d'un projet qui n'est pas en cours.")
+
         if hasattr(user, 'role') and user.role == 'manager' and expense.user == user:
             return super().destroy(request, *args, **kwargs)
         else:
@@ -83,8 +99,10 @@ class GeneralExpenseViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         user = self.request.user
         project = serializer.validated_data.get('project')
+
         if project.status not in ProjectExpenseAllowed.allowed_status:
             raise PermissionError("Vous ne pouvez pas ajouter de dépense à un projet qui n'est pas en cours.")
+
         if hasattr(user, 'role') and user.role in ['manager', 'accountant']:
             serializer.save(user=user)
         else:
@@ -93,8 +111,10 @@ class GeneralExpenseViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         user = self.request.user
         expense = self.get_object()
+
         if expense.project.status not in ProjectExpenseAllowed.allowed_status:
             raise PermissionError("Vous ne pouvez pas modifier une dépense d'un projet qui n'est pas en cours.")
+
         if hasattr(user, 'role') and user.role in ['manager', 'accountant'] and expense.user == user:
             serializer.save()
         else:
@@ -103,6 +123,10 @@ class GeneralExpenseViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         user = self.request.user
         expense = self.get_object()
+
+        if expense.project.status not in ProjectExpenseAllowed.allowed_status:
+            raise PermissionError("Vous ne pouvez pas supprimer une dépense d'un projet qui n'est pas en cours.")
+
         if hasattr(user, 'role') and user.role in ['manager', 'accountant'] and expense.user == user:
             return super().destroy(request, *args, **kwargs)
         else:

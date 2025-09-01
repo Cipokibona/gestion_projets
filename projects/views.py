@@ -32,7 +32,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
             raise PermissionError("Seul le manager peut mettre à jour un projet.")
 
     def destroy(self, request, *args, **kwargs):
+        user = request.user
         project = self.get_object()
-        project.status = 'cancelled'
-        project.save()
-        return Response({'detail': 'Le projet a été annulé.'}, status=status.HTTP_200_OK)
+
+        if hasattr(user, 'role') and user.role == 'manager':
+            if project.user == user:
+                project.status = 'cancelled'
+                project.save()
+                return Response({'detail': 'Le projet a été annulé.'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'detail': 'Vous ne pouvez annuler que vos propres projets.'}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({'detail': 'Seul le manager peut annuler un projet.'}, status=status.HTTP_403_FORBIDDEN)

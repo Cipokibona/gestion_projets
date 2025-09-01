@@ -28,20 +28,29 @@ class Transaction(models.Model):
 
     def clean(self):
         try:
+            # Vérification que le compte source existe
+            if not Account.objects.filter(pk=self.account_id).exists():
+                raise ValidationError("Le compte source spécifié n'existe pas.")
+
+            # Vérification du type de transaction
             if self.transaction_type == 'transfer':
                 if not self.destination_account:
                     raise ValidationError("Le compte de destination est requis pour un transfert.")
+                if not Account.objects.filter(pk=self.destination_account_id).exists():
+                    raise ValidationError("Le compte de destination spécifié n'existe pas.")
                 if self.account.balance < self.amount:
                     raise ValidationError("Solde insuffisant sur le compte source pour effectuer le transfert.")
+
             elif self.transaction_type == 'withdrawal':
                 if self.account.balance < self.amount:
                     raise ValidationError("Solde insuffisant pour effectuer le retrait.")
+
         except ValidationError as e:
             TransactionErrorLog.objects.create(
                 user=self.user,
                 transaction_type=self.transaction_type,
-                account=self.account,
-                destination_account=self.destination_account,
+                account=self.account if Account.objects.filter(pk=self.account_id).exists() else None,
+                destination_account=self.destination_account if self.destination_account and Account.objects.filter(pk=self.destination_account_id).exists() else None,
                 amount=self.amount,
                 error_message=str(e)
             )
