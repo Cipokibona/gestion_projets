@@ -27,34 +27,51 @@ class Transaction(models.Model):
     cancelled_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='cancelled_transactions')
 
     def clean(self):
-        try:
-            # Vérification que le compte source existe
-            if not Account.objects.filter(pk=self.account_id).exists():
-                raise ValidationError("Le compte source spécifié n'existe pas.")
+        # Vérifie l'existence du compte source
+        if not Account.objects.filter(pk=self.account_id).exists():
+            raise ValidationError("Le compte source spécifié n'existe pas.")
 
-            # Vérification du type de transaction
-            if self.transaction_type == 'transfer':
-                if not self.destination_account:
-                    raise ValidationError("Le compte de destination est requis pour un transfert.")
-                if not Account.objects.filter(pk=self.destination_account_id).exists():
-                    raise ValidationError("Le compte de destination spécifié n'existe pas.")
-                if self.account.balance < self.amount:
-                    raise ValidationError("Solde insuffisant sur le compte source pour effectuer le transfert.")
+        # Vérifie le type de transaction
+        if self.transaction_type == 'transfer':
+            if not self.destination_account:
+                raise ValidationError("Le compte de destination est requis pour un transfert.")
+            if not Account.objects.filter(pk=self.destination_account_id).exists():
+                raise ValidationError("Le compte de destination spécifié n'existe pas.")
+            if self.account.balance < self.amount:
+                raise ValidationError("Solde insuffisant sur le compte source pour effectuer le transfert.")
 
-            elif self.transaction_type == 'withdrawal':
-                if self.account.balance < self.amount:
-                    raise ValidationError("Solde insuffisant pour effectuer le retrait.")
+        elif self.transaction_type == 'withdrawal':
+            if self.account.balance < self.amount:
+                raise ValidationError("Solde insuffisant pour effectuer le retrait.")
 
-        except ValidationError as e:
-            TransactionErrorLog.objects.create(
-                user=self.user,
-                transaction_type=self.transaction_type,
-                account=self.account if Account.objects.filter(pk=self.account_id).exists() else None,
-                destination_account=self.destination_account if self.destination_account and Account.objects.filter(pk=self.destination_account_id).exists() else None,
-                amount=self.amount,
-                error_message=str(e)
-            )
-            raise e
+        # try:
+        #     # Vérification que le compte source existe
+        #     if not Account.objects.filter(pk=self.account_id).exists():
+        #         raise ValidationError("Le compte source spécifié n'existe pas.")
+
+        #     # Vérification du type de transaction
+        #     if self.transaction_type == 'transfer':
+        #         if not self.destination_account:
+        #             raise ValidationError("Le compte de destination est requis pour un transfert.")
+        #         if not Account.objects.filter(pk=self.destination_account_id).exists():
+        #             raise ValidationError("Le compte de destination spécifié n'existe pas.")
+        #         if self.account.balance < self.amount:
+        #             raise ValidationError("Solde insuffisant sur le compte source pour effectuer le transfert.")
+
+        #     elif self.transaction_type == 'withdrawal':
+        #         if self.account.balance < self.amount:
+        #             raise ValidationError("Solde insuffisant pour effectuer le retrait.")
+
+        # except ValidationError as e:
+        #     TransactionErrorLog.objects.create(
+        #         user=self.user,
+        #         transaction_type=self.transaction_type,
+        #         account=self.account if Account.objects.filter(pk=self.account_id).exists() else None,
+        #         destination_account=self.destination_account if self.destination_account and Account.objects.filter(pk=self.destination_account_id).exists() else None,
+        #         amount=self.amount,
+        #         error_message=str(e)
+        #     )
+        #     raise e
 
     def apply(self):
         if self.transaction_type == 'deposit':
@@ -90,10 +107,27 @@ class Transaction(models.Model):
         self.save()
 
     def save(self, *args, **kwargs):
-        self.full_clean()
+        try:
+            self.full_clean()
+        except ValidationError as e:
+            TransactionErrorLog.objects.create(
+                user=self.user,
+                transaction_type=self.transaction_type,
+                account=self.account if Account.objects.filter(pk=self.account_id).exists() else None,
+                destination_account=self.destination_account if self.destination_account and Account.objects.filter(pk=self.destination_account_id).exists() else None,
+                amount=self.amount,
+                error_message=str(e)
+            )
+            raise
         super().save(*args, **kwargs)
         if not self.is_cancelled:
             self.apply()
+
+    # def save(self, *args, **kwargs):
+    #     self.full_clean()
+    #     super().save(*args, **kwargs)
+    #     if not self.is_cancelled:
+    #         self.apply()
 
     def __str__(self):
         if self.transaction_type == 'transfer':

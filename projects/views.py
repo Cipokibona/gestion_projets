@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 
 from .models import Project
 from .serializers import ProjectSerializer
@@ -18,7 +19,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if hasattr(user, 'role') and user.role == 'manager':
             serializer.save(user=user)
         else:
-            raise PermissionError("Seul le manager peut créer un projet.")
+            raise PermissionDenied("Seul le manager peut créer un projet.")
 
     def perform_update(self, serializer):
         user = self.request.user
@@ -27,9 +28,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
             if project.user == user:
                 serializer.save()
             else:
-                raise PermissionError("Vous ne pouvez mettre à jour que vos propres projets.")
+                raise PermissionDenied("Vous ne pouvez mettre à jour que vos propres projets.")
         else:
-            raise PermissionError("Seul le manager peut mettre à jour un projet.")
+            raise PermissionDenied("Seul le manager peut mettre à jour un projet.")
 
     def destroy(self, request, *args, **kwargs):
         user = request.user
