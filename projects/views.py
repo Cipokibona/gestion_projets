@@ -17,7 +17,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         user = self.request.user
         if hasattr(user, 'role') and user.role == 'manager':
-            serializer.save(user=user)
+            project = serializer.save(user=user)
+            project.update_status_with_advances()
         else:
             raise PermissionDenied("Seul le manager peut créer un projet.")
 
@@ -26,7 +27,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if hasattr(user, 'role') and user.role == 'manager':
             project = self.get_object()
             if project.user == user:
-                serializer.save()
+                project = serializer.save()
+                project.update_status_with_advances()
             else:
                 raise PermissionDenied("Vous ne pouvez mettre à jour que vos propres projets.")
         else:

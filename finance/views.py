@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -66,15 +67,15 @@ class MainWalletViewSet(viewsets.ModelViewSet):
         project = serializer.validated_data.get('project')
 
         if not is_project_active(project):
-            raise PermissionError("Le projet doit être actif pour créer un MainWallet.")
+            raise PermissionDenied("Le projet doit être actif pour créer un MainWallet.")
 
         if MainWallet.objects.filter(project=project).exists():
-            raise PermissionError("Un MainWallet existe déjà pour ce projet.")
+            raise PermissionDenied("Un MainWallet existe déjà pour ce projet.")
 
         if hasattr(user, 'role') and user.role in ['manager', 'accountant']:
             serializer.save()
         else:
-            raise PermissionError("Seul le manager ou le caissier peut créer un MainWallet.")
+            raise PermissionDenied("Seul le manager ou le caissier peut créer un MainWallet.")
 
     def perform_update(self, serializer):
         user = self.request.user
@@ -82,12 +83,12 @@ class MainWalletViewSet(viewsets.ModelViewSet):
         project = wallet.project
 
         if not is_project_active(project):
-            raise PermissionError("Le projet n'est pas actif.")
+            raise PermissionDenied("Le projet n'est pas actif.")
 
         if hasattr(user, 'role') and user.role in ['manager', 'accountant'] and project.user == user:
             serializer.save()
         else:
-            raise PermissionError("Vous ne pouvez mettre à jour que vos propres MainWallets.")
+            raise PermissionDenied("Vous ne pouvez mettre à jour que vos propres MainWallets.")
 
     def destroy(self, request, *args, **kwargs):
         user = self.request.user
@@ -113,12 +114,12 @@ class TaskWalletViewSet(viewsets.ModelViewSet):
         project = serializer.validated_data.get('project')
 
         if not is_project_active(project):
-            raise PermissionError("Le projet doit être actif pour créer un TaskWallet.")
+            raise PermissionDenied("Le projet doit être actif pour créer un TaskWallet.")
 
         if hasattr(user, 'role') and user.role in ['manager', 'accountant']:
             serializer.save(user=user)
         else:
-            raise PermissionError("Seul le manager ou le caissier peut créer un TaskWallet.")
+            raise PermissionDenied("Seul le manager ou le caissier peut créer un TaskWallet.")
 
     def perform_update(self, serializer):
         user = self.request.user
@@ -126,12 +127,12 @@ class TaskWalletViewSet(viewsets.ModelViewSet):
         project = taskwallet.project
 
         if not is_project_active(project):
-            raise PermissionError("Le projet n'est pas actif.")
+            raise PermissionDenied("Le projet n'est pas actif.")
 
         if hasattr(user, 'role') and user.role in ['manager', 'accountant'] and taskwallet.user == user:
             serializer.save()
         else:
-            raise PermissionError("Vous ne pouvez mettre à jour que vos propres TaskWallets.")
+            raise PermissionDenied("Vous ne pouvez mettre à jour que vos propres TaskWallets.")
 
     def destroy(self, request, *args, **kwargs):
         user = self.request.user

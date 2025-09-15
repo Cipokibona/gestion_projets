@@ -20,3 +20,28 @@ class Project(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pending')
+    extra_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def update_status_with_advances(self, continue_if_exceeded=False, extra_amount=0):
+        from finance.models import Advance
+        total_advances = Advance.objects.filter(project=self).aggregate(models.Sum('amount'))['amount__sum'] or 0
+
+        if total_advances > 0 and self.status == 'pending':
+            self.status = 'in_progress'
+
+        if total_advances >= self.estimated_budget:
+            if total_advances == self.estimated_budget:
+                # Ici, tu dois demander à l'utilisateur si le projet continue
+                if continue_if_exceeded:
+                    self.status = 'in_progress'
+                    self.extra_amount = extra_amount
+                else:
+                    self.status = 'successful'
+            else:  # total_advances > estimated_budget
+                if continue_if_exceeded:
+                    self.status = 'in_progress'
+                    self.extra_amount = total_advances - self.estimated_budget
+                else:
+                    self.status = 'successful'
+        self.save()

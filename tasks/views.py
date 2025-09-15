@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -16,27 +17,30 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        # Seuls les managers voient toutes les tâches
         if hasattr(user, 'role') and user.role == 'manager':
             return Task.objects.all()
-        return Task.objects.none()
+        # return Task.objects.none()
+        raise PermissionDenied("Seuls les managers ont le droit de voir les tâches.")
 
     def perform_create(self, serializer):
+        user = self.request.user
         project = serializer.validated_data.get('project')
+        if not (hasattr(user, 'role') and user.role == 'manager'):
+            raise PermissionDenied("Seul le manager peut créer une tâche.")
         if project.status != 'in_progress':
-            raise PermissionError("Aucune action n'est autorisée sur les tâches d'un projet qui n'est pas en cours.")
-        serializer.save(created_by=self.request.user)
+            raise PermissionDenied("Aucune action n'est autorisée sur les tâches d'un projet qui n'est pas en cours.")
+        serializer.save(created_by=user)
 
     def perform_update(self, serializer):
         task = self.get_object()
         user = self.request.user
         if task.project.status != 'in_progress':
-            raise PermissionError("Aucune action n'est autorisée sur les tâches d'un projet qui n'est pas en cours.")
+            raise PermissionDenied("Aucune action n'est autorisée sur les tâches d'un projet qui n'est pas en cours.")
         if (hasattr(user, 'role') and user.role == 'manager' and
             (task.created_by == user or task.assigned_to == user)):
             serializer.save()
         else:
-            raise PermissionError("Seul le créateur ou le manager assigné peut modifier cette tâche.")
+            raise PermissionDenied("Seul le créateur ou le manager assigné peut modifier cette tâche.")
 
     def destroy(self, request, *args, **kwargs):
         task = self.get_object()
