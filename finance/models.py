@@ -7,6 +7,7 @@ from Account.models import Account
 class Advance(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='advances')
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='advances')
+    name = models.CharField(max_length=255, blank=True, null=True)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='advances')
     payment_date = models.DateField()

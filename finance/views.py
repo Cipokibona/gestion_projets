@@ -73,7 +73,7 @@ class MainWalletViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Un MainWallet existe déjà pour ce projet.")
 
         if hasattr(user, 'role') and user.role in ['manager', 'accountant']:
-            serializer.save()
+            serializer.save(user=self.request.user)
         else:
             raise PermissionDenied("Seul le manager ou le caissier peut créer un MainWallet.")
 

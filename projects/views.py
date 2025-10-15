@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from .models import Project
 from .serializers import ProjectSerializer
@@ -18,7 +18,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if hasattr(user, 'role') and user.role == 'manager':
             project = serializer.save(user=user)
-            project.update_status_with_advances()
+            try:
+                project.update_status()
+            except ValueError as e:
+                raise ValidationError({"status": str(e)})
         else:
             raise PermissionDenied("Seul le manager peut créer un projet.")
 
@@ -28,7 +31,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project = self.get_object()
             if project.user == user:
                 project = serializer.save()
-                project.update_status_with_advances()
+                try:
+                    project.update_status()
+                except ValueError as e:
+                    raise ValidationError({"status": str(e)})
             else:
                 raise PermissionDenied("Vous ne pouvez mettre à jour que vos propres projets.")
         else:

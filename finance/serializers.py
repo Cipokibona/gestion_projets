@@ -14,6 +14,7 @@ class MainWalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = MainWallet
         fields = ['id', 'user', 'project', 'current_amount']
+        read_only_fields = ['user']
 
     def get_current_amount(self, obj):
         return obj.current_amount
