@@ -7,4 +7,4 @@ class EnterpriseWalletSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EnterpriseWallet
-        fields = ['id', 'name', 'created_at', 'total_balance']
+        fields = ['id', 'name', 'total_balance', 'user', 'created_at']
