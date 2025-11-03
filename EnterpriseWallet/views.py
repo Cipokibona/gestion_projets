@@ -1,6 +1,7 @@
-from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
+from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 
 from .models import EnterpriseWallet
 from .serializers import EnterpriseWalletSerializer
@@ -9,33 +10,50 @@ from .serializers import EnterpriseWalletSerializer
 class EnterpriseWalletViewSet(viewsets.ModelViewSet):
     queryset = EnterpriseWallet.objects.all()
     serializer_class = EnterpriseWalletSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
-    def perform_create(self, serializer):
-        user = self.request.user
-        enterprise = serializer.validated_data.get('enterprise')
-        # Limiter à un seul EnterpriseWallet par entreprise
-        if EnterpriseWallet.objects.filter(enterprise=enterprise).exists():
-            raise PermissionError("Un EnterpriseWallet existe déjà pour cette entreprise.")
-        if hasattr(user, 'role') and user.role in ['manager', 'accountant']:
-            serializer.save(user=user)
-        else:
-            raise PermissionError("Seul le manager ou le caissier peut créer un EnterpriseWallet.")
+    def create(self, request, *args, **kwargs):
+        if request.user.role not in ['manager', 'accountant']:
+            raise PermissionDenied("Seul un utilisateur avec le rôle 'manager' ou 'accountant' peut créer un wallet.")
 
-    def perform_update(self, serializer):
-        user = self.request.user
+        if EnterpriseWallet.objects.filter(user=request.user).exists():
+            return Response(
+                {"detail": "Un wallet existe déjà pour cette entreprise."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
         wallet = self.get_object()
+        if wallet.user != request.user:
+            raise PermissionDenied("Seul le créateur du wallet peut le modifier.")
+        return super().update(request, *args, **kwargs)
 
-        if wallet.user == user:
-            serializer.save()
-        else:
-            raise PermissionError("Vous ne pouvez mettre à jour que votre propre EnterpriseWallet.")
+    def partial_update(self, request, *args, **kwargs):
+        wallet = self.get_object()
+        if wallet.user != request.user:
+            raise PermissionDenied("Seul le créateur du wallet peut le modifier.")
+        return super().partial_update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
-        user = self.request.user
+        wallet = self.get_object()
+        if wallet.user != request.user:
+            raise PermissionDenied("Seul le créateur du wallet peut le supprimer.")
+        return super().destroy(request, *args, **kwargs)
+
+    @action(detail=True, methods=['get'], url_path='balance')
+    def get_balance(self, request, pk=None):
         wallet = self.get_object()
 
-        if wallet.user == user:
-            return super().destroy(request, *args, **kwargs)
-        else:
-            return Response({'detail': "Vous ne pouvez supprimer que votre propre EnterpriseWallet."}, status=status.HTTP_403_FORBIDDEN)
+        # # Vérifie si l'utilisateur a le droit de voir ce wallet
+        # if wallet.user != request.user:
+        #     raise PermissionDenied("Vous n'avez pas accès à ce wallet.")
+
+        return Response(
+            {"wallet_id": wallet.id, "wallet_name": wallet.name, "balance": wallet.total_balance()},
+            status=status.HTTP_200_OK
+        )
