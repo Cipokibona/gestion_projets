@@ -34,3 +34,6 @@ Thumbs.db
 # === Secrets par erreur ===
 .env
 *.env
+
+# === Base de données SQLite ===
+db.sqlite3
