@@ -4,6 +4,9 @@ from .models import Task
 
 class TaskSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    project_name = serializers.CharField(source='project.name', read_only=True)
+    created_by_username = serializers.CharField(source='created_by.username', read_only=True)
+    assigned_to_username = serializers.CharField(source='assigned_to.username', read_only=True)
 
     class Meta:
         model = Task
