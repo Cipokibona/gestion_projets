@@ -133,7 +133,7 @@ class GeneralExpenseViewSet(viewsets.ModelViewSet):
             return Response({'detail': "Vous ne pouvez supprimer que vos propres dépenses."}, status=status.HTTP_403_FORBIDDEN)
 
 class CompanyExpenseViewSet(viewsets.ModelViewSet):
-    queryset = CompanyExpense.objects.all()
+    queryset = CompanyExpense.objects.all().order_by('-created_at')
     serializer_class = CompanyExpenseSerializer
     permission_classes = [IsAuthenticated]
 

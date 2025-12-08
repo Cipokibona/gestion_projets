@@ -20,6 +20,8 @@ class GeneralExpenseSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class CompanyExpenseSerializer(serializers.ModelSerializer):
+    user_username = serializers.CharField(source='user.username', read_only=True)
+    compte_name = serializers.CharField(source='account.name', read_only=True)
     class Meta:
         model = CompanyExpense
         fields = '__all__'
