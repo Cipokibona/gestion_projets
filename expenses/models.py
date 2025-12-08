@@ -34,3 +34,14 @@ class GeneralExpense(models.Model):
     date = models.DateField(auto_now_add=True)
     is_valid = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class CompanyExpense(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='company_expenses')
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='company_expenses')
+    date = models.DateField(auto_now_add=True)
+    is_valid = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
