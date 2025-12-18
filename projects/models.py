@@ -28,8 +28,8 @@ class Project(models.Model):
 
         has_advance = Advance.objects.filter(project=self).exists()
 
-        if not has_advance and self.status == 'in_progress':
-            raise ValueError("Impossible de passer le projet en 'in_progress' sans au moins une avance enregistrée.")
+        # if not has_advance and self.status == 'in_progress':
+        #     raise ValueError("Impossible de passer le projet en 'in_progress' sans au moins une avance enregistrée.")
 
         if has_advance and self.status == 'pending':
             self.status = 'in_progress'
