@@ -11,6 +11,7 @@ class TransactionSerializer(serializers.ModelSerializer):
     user_username = serializers.CharField(source='user.username', read_only=True)
     account_name = serializers.CharField(source='account.name', read_only=True)
     destination_account_name = serializers.CharField(source='destination_account.name', read_only=True)
+    cancelled_by_username = serializers.CharField(source='cancelled_by.username', read_only=True)
 
     class Meta:
         model = Transaction
@@ -18,7 +19,7 @@ class TransactionSerializer(serializers.ModelSerializer):
             'id', 'user', 'transaction_type', 'account',
             'destination_account', 'amount', 'cost', 'description',
             'created_at', 'is_cancelled', 'cancel_reason',
-            'cancelled_at', 'cancelled_by', 'user_username','account_name', 'destination_account_name'
+            'cancelled_at', 'cancelled_by', 'user_username','account_name', 'destination_account_name','cancelled_by_username'
         ]
         read_only_fields = ['user', 'created_at', 'is_cancelled', 'cancelled_at', 'cancelled_by']
 
