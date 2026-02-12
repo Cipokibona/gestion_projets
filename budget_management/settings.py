@@ -29,7 +29,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 DEBUG = True
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-dev-key')
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
+# ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
