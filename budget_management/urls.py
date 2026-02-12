@@ -15,9 +15,14 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+from authem.views import FrontendAppView
+import os
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
+    path('', FrontendAppView.as_view(), name='home'),
     path('admin/', admin.site.urls),
     path('api/', include('authem.urls')),
     path('api/', include('expenses.urls')),
@@ -28,4 +33,7 @@ urlpatterns = [
     path('api/', include('EnterpriseWallet.urls')),
     path('api/', include('Account.urls')),
     path('api/', include('Transaction.urls')),
+    re_path(r'^(?!admin|api|static|assets).*$' , FrontendAppView.as_view(), name='frontend'),
 ]
+
+urlpatterns += static("/assets/", document_root=os.path.join(settings.BASE_DIR, "static/assets/"))
