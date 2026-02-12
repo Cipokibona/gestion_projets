@@ -1,6 +1,0 @@
-# Sert les fichiers static depuis staticfiles
-Alias /static/ /home/ges/ges.bi/staticfiles/
-
-<Directory /home/ges/ges.bi/staticfiles>
-    Require all granted
-</Directory>
