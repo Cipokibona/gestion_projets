@@ -1,9 +1,6 @@
-# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
-PassengerAppRoot "/home/ges/ges.bi"
-PassengerBaseURI "/"
-PassengerPython "/home/ges/virtualenv/ges.bi/3.11/bin/python"
-# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
-# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION BEGIN
-<IfModule Litespeed>
-</IfModule>
-# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION END
+RewriteEngine On
+
+Alias /static /home/ges/ges.bi/staticfiles
+<Directory /home/ges/ges.bi/staticfiles>
+    Require all granted
+</Directory>
