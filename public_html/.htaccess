@@ -1,8 +1,0 @@
-<IfModule mod_expires.c>
-    ExpiresActive On
-    ExpiresDefault "access plus 7 days"
-</IfModule>
-
-<IfModule mod_headers.c>
-    Header set Access-Control-Allow-Origin "*"
-</IfModule>
