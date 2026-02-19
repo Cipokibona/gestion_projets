@@ -20,6 +20,7 @@ from authem.views import FrontendAppView
 import os
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve
 
 urlpatterns = [
     path('', FrontendAppView.as_view(), name='home'),
@@ -37,3 +38,11 @@ urlpatterns = [
 ]
 
 urlpatterns += static("/assets/", document_root=os.path.join(settings.BASE_DIR, "static/assets/"))
+
+urlpatterns += [
+    re_path(
+        r'^(?P<path>.*\.(?:png|jpg|jpeg|svg|gif|ico|css|js|woff2?|ttf|map))$',
+        serve,
+        {'document_root': os.path.join(settings.BASE_DIR, 'static')}
+    ),
+]
