@@ -3,6 +3,7 @@ from .models import Project
 
 
 class ProjectSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.username', read_only=True)
     class Meta:
         model = Project
         fields = '__all__'
