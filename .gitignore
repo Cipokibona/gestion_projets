@@ -6,9 +6,11 @@ __pycache__/
 # === Virtualenv ===
 env/
 venv/
+.venv/
+
+# === IDE ===
 .vscode/
-.budgetaire/
-.budgetaire/
+.idea/
 
 # === Fichiers de logs ===
 *.log
@@ -28,12 +30,27 @@ htmlcov/
 Thumbs.db
 
 # === Fichiers liés à pre-commit ===
-.pre-commit-config.yaml.bak
 .pre-commit/
+.pre-commit-config.yaml.bak
 
-# === Secrets par erreur ===
+# === Secrets ===
 .env
 *.env
 
-# === Base de données SQLite ===
+# === Bases de données ===
 db.sqlite3
+*.sqlite3
+*.db
+
+# === Sauvegardes de bases de données ===
+*.sql
+*.dump
+backup/
+backups/
+database/
+
+# === Fichiers Django collectstatic ===
+staticfiles/
+
+# === Uploads utilisateurs ===
+media/
